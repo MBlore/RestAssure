@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<service xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="restAssure">
+  <name>Server Demo</name>
+  <description />
+  <version>1.0</version>
+  <automaticHelp>false</automaticHelp>
+  <baseAddress>http://localhost:1122/jsondemo</baseAddress>
+  <allowResponseCompression>true</allowResponseCompression>
+  <resources>
+    <resource>
+      <name>Example Resource</name>
+      <description />
+      <uriTemplate>example</uriTemplate>
+      <authenticationScheme />
+      <verbs>
+        <get allowed="true" authenticate="false" />
+        <post allowed="false" authenticate="false" />
+        <put allowed="false" authenticate="false" />
+        <delete allowed="false" authenticate="false" />
+      </verbs>
+      <invokeContentTypes />
+      <representationContentTypes>
+        <contentType>application/xml</contentType>
+      </representationContentTypes>
+      <automaticCachingEnabled>false</automaticCachingEnabled>
+      <cacheExpiry>0</cacheExpiry>
+    </resource>
+  </resources>
+  <authenticationSchemes />
+</service>
