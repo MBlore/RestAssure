@@ -1,14 +1,49 @@
 module RestAssure
   require 'rexml/document'
+  require 'uri'
+  require 'webrick'
+  
+  class Router
+    include Singleton
+    
+    def initialize
+      @route_list = {:get => {}, :put => {}, :post => {}, :delete => {}}
+    end
+    
+    def add_route(method, route, &blk)
+      @route_list[method][route] = blk
+    end
+      
+    def handle_request(request)
+      
+      method = request.request_uri.method.downcase.to_sym
+      route = request.request_uri
+      
+      content = @route_list[method][route].call
+      return content
+      
+    end
+    
+  end
+  
+  class HTTPListener < WEBrick::HTTPServlet::AbstractServlet
+    def do_GET(request, response)
+      Router.instance.handle_request(request)
+    end      
+  end
   
   class RestAssureServer
     
     def initialize(config_filename)
       @config_filename = config_filename
+      @route_list = {:get => {}, :put => {}, :post => {}, :delete => {}}
     end
     
+    def add_route(method, route, &blk)
+      @route_list[method][route] = blk
+    end
+ 
     def start
-      
         begin
       
           puts 'Initializing REST server...'
@@ -25,11 +60,22 @@ module RestAssure
             return
           end
           
+          base_address = doc.root.elements['baseAddress'].text
+          
+          @uri = URI::parse(base_address)
+          
+          if !@uri.is_a? URI::HTTP and !@uri.is_a? URI::HTTPS
+            puts 'Error: The base address must be a HTTP or HTTPS URI.'
+            return
+          end
+          
+          puts
+          puts 'Service Name: ' + doc.root.elements['name'].text
+          puts 'Service Address: ' + base_address
           puts
           
-          puts 'Service Name: ' + doc.root.elements['name'].text
-          puts 'Service Address: ' + doc.root.elements['baseAddress'].text
-        
+          start_server()
+                                                
         rescue => e
           puts 'Unhandled exception occurred.'
           puts 'Message: ' + e.message
@@ -142,6 +188,33 @@ module RestAssure
       end
             
       return errors
+      
+    end
+    
+    def start_server
+      
+      webrick_log_file = 'NUL'
+      webrick_logger = WEBrick::Log.new(webrick_log_file, WEBrick::Log::DEBUG)
+      
+      server = WEBrick::HTTPServer.new(
+        :Port   => @uri.port,
+        :Logger => webrick_logger,
+      )
+      
+      server.mount_proc '/' do |req, res|
+        res.status = 200
+        res['Content-Type'] = 'text/html'
+        res.body = '<b>hello</b> <i>world</i>'
+      end
+
+      trap "INT" do
+        puts('Shutting down...')
+        server.shutdown
+      end
+
+      puts 'Listening for requests...'
+      
+      server.start
       
     end
     

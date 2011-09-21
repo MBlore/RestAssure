@@ -1,13 +1,18 @@
 # Main application point.
 
 require 'webrick'
-require '../../lib/rest_assure_server'
+require "addressable/template"
 
 class Simple < WEBrick::HTTPServlet::AbstractServlet
   
   def do_GET(request, response)
     
     puts request.header
+    
+    puts request.path
+    
+    template = Addressable::Template.new("/resource1/{0}/{1}/{2}")
+    p template.extract(request.path)
     
     status, content_type, body = do_stuff_with(request)
     
@@ -22,7 +27,8 @@ class Simple < WEBrick::HTTPServlet::AbstractServlet
   
 end
 
-#server = WEBrick::HTTPServer.new(:Port => 8000)
+
+#server = WEBrick::HTTPServer.new(:Port => 8001)
 #server.mount "/configurable", Simple
 
 #trap "INT" do
